@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 // Converts "17:00" from the time picker into "5:00 PM"
 function to12Hour(t: string) {
@@ -10,21 +10,32 @@ function to12Hour(t: string) {
   return `${h % 12 || 12}:${String(m).padStart(2, "0")} ${ampm}`;
 }
 
+// Returns the signed-in user's club, or null if they don't have one yet
+async function getClub() {
+  const user = await currentUser();
+  const club = user?.publicMetadata?.club;
+  if (!user || typeof club !== "string" || !club) return null;
+  return { userId: user.id, club };
+}
+
 async function addEvent(formData: FormData) {
-  "use server";await auth.protect();
+  "use server";
+  await auth.protect();
+
+  const me = await getClub();
+  if (!me) return; // not linked to a club, so no posting
 
   const title = String(formData.get("title") ?? "").trim();
   const date = String(formData.get("date") ?? "");
   const time = String(formData.get("time") ?? "");
   const location = String(formData.get("location") ?? "").trim();
-  const host = String(formData.get("host") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
 
-  if (!title || !date || !time || !location || !host) return;
+  if (!title || !date || !time || !location) return;
 
   await sql`
-    INSERT INTO events (title, date, time, location, host, description)
-    VALUES (${title}, ${date}, ${to12Hour(time)}, ${location}, ${host}, ${description})
+    INSERT INTO events (title, date, time, location, host, description, owner_id)
+    VALUES (${title}, ${date}, ${to12Hour(time)}, ${location}, ${me.club}, ${description}, ${me.userId})
   `;
 
   revalidatePath("/");
@@ -35,21 +46,31 @@ const inputClass = "mt-1 w-full rounded-lg border bg-transparent p-2";
 
 export default async function SubmitPage() {
   await auth.protect();
+  const me = await getClub();
+
+  if (!me) {
+    return (
+      <main className="mx-auto max-w-xl p-6">
+        <h1 className="text-3xl font-bold">Almost there</h1>
+        <p className="mt-2 text-gray-500">
+          Your account isn&apos;t linked to a club or team yet. Ask the site admin
+          to approve your club, then come back.
+        </p>
+      </main>
+    );
+  }
 
   return (
     <main className="mx-auto max-w-xl p-6">
       <h1 className="text-3xl font-bold">Add an Event</h1>
-      <p className="mt-1 text-gray-500">Post something for the whole school to see.</p>
+      <p className="mt-1 text-gray-500">
+        Posting as <span className="font-semibold">{me.club}</span>
+      </p>
 
       <form action={addEvent} className="mt-6 space-y-4">
         <label className="block">
           Event name
           <input name="title" required className={inputClass} />
-        </label>
-
-        <label className="block">
-          Club / team hosting
-          <input name="host" required className={inputClass} />
         </label>
 
         <div className="flex gap-4">
