@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
@@ -10,7 +11,7 @@ function to12Hour(t: string) {
 }
 
 async function addEvent(formData: FormData) {
-  "use server";
+  "use server";await auth.protect();
 
   const title = String(formData.get("title") ?? "").trim();
   const date = String(formData.get("date") ?? "");
@@ -32,7 +33,9 @@ async function addEvent(formData: FormData) {
 
 const inputClass = "mt-1 w-full rounded-lg border bg-transparent p-2";
 
-export default function SubmitPage() {
+export default async function SubmitPage() {
+  await auth.protect();
+
   return (
     <main className="mx-auto max-w-xl p-6">
       <h1 className="text-3xl font-bold">Add an Event</h1>

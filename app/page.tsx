@@ -35,9 +35,9 @@ export default async function Home() {
     <main className="mx-auto max-w-3xl p-6">
       <h1 className="text-3xl font-bold">Upcoming Events</h1>
       <p className="mt-1 text-gray-500">Everything happening on the Avenue, in one place.</p>
-<Link href="/submit" className="mt-3 inline-block text-blue-500 underline">
-  + Add an event
-</Link>
+      <Link href="/submit" className="mt-3 inline-block text-blue-500 underline">
+        + Add an event
+      </Link>
       <div className="mt-6 space-y-4">
         {events.length === 0 && <p>No upcoming events yet.</p>}
         {events.map((event) => (
