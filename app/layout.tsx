@@ -1,6 +1,8 @@
-import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
-import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { isClerkConfigured } from "@/lib/clerk-config";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,29 +16,39 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "School Events",
-  description: "Everything happening at school, in one place.",
+  title: {
+    default: "1635Funcs — Everything happening at school",
+    template: "%s · 1635Funcs",
+  },
+  description:
+    "Find clubs, sports, meetings, fundraisers, and other events happening around your school.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#050506",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full bg-background antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <ClerkProvider>
-          <header className="flex items-center justify-end gap-4 p-4">
-            <Show when="signed-out">
-              <SignInButton />
-              <SignUpButton />
-            </Show>
-            <Show when="signed-in">
-              <UserButton />
-            </Show>
-          </header>
-          {children}
-        </ClerkProvider>
+      <body className="flex min-h-full flex-col">
+        {isClerkConfigured ? (
+          <ClerkProvider>
+            <SiteHeader />
+            <div className="flex-1">{children}</div>
+            <SiteFooter />
+          </ClerkProvider>
+        ) : (
+          <>
+            <SiteHeader />
+            <div className="flex-1">{children}</div>
+            <SiteFooter />
+          </>
+        )}
       </body>
     </html>
   );

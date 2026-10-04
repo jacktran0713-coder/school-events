@@ -1,12 +1,13 @@
 "use server";
 
 import { sql } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function deleteEvent(formData: FormData) {
-  const { userId } = await auth();
-  if (!userId) return;
+  const userId = await getUserId();
+  if (!userId || !sql) return;
 
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return;
@@ -15,4 +16,11 @@ export async function deleteEvent(formData: FormData) {
   await sql`DELETE FROM events WHERE id = ${id} AND owner_id = ${userId}`;
 
   revalidatePath("/");
+  revalidatePath("/events");
+  revalidatePath("/my-events");
+
+  const redirectTo = formData.get("redirectTo");
+  if (typeof redirectTo === "string" && redirectTo.startsWith("/")) {
+    redirect(redirectTo);
+  }
 }
