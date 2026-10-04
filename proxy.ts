@@ -1,6 +1,9 @@
 import { clerkMiddleware } from '@clerk/nextjs/server'
+import { NextResponse } from 'next/server'
+import { isClerkConfigured } from './lib/clerk-config'
 
-export default clerkMiddleware()
+// Clerk throws on every request when its keys are absent, so fall back to a passthrough.
+export default isClerkConfigured ? clerkMiddleware() : () => NextResponse.next()
 
 export const config = {
   matcher: [

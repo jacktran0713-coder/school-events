@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "@/lib/auth";
+import { isClerkConfigured } from "@/lib/clerk-config";
 import { SignInButton } from "@clerk/nextjs";
 import { Plus, Trash2 } from "lucide-react";
 import { EventCard } from "@/components/event-card";
@@ -32,7 +33,7 @@ function SectionHeading({ title, count }: { title: string; count?: number }) {
 }
 
 export default async function MyEventsPage() {
-  const { userId } = await auth();
+  const userId = await getUserId();
   const allEvents = await getAllEvents();
   const going = allEvents.filter((e) => sampleRsvpEventIds.includes(e.id));
   const posted = userId ? await getEventsByOwner(userId) : [];
@@ -77,14 +78,18 @@ export default async function MyEventsPage() {
           <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-border px-6 py-14 text-center">
             <p className="font-medium">Sign in to manage your club&apos;s events</p>
             <p className="mt-1 text-sm text-muted">Club leaders can post and edit events after signing in.</p>
-            <SignInButton>
-              <button
-                type="button"
-                className="mt-5 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-hover"
-              >
-                Sign In
-              </button>
-            </SignInButton>
+            {isClerkConfigured ? (
+              <SignInButton>
+                <button
+                  type="button"
+                  className="mt-5 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-accent-hover"
+                >
+                  Sign In
+                </button>
+              </SignInButton>
+            ) : (
+              <p className="mt-5 text-sm text-muted">Sign-in is temporarily unavailable.</p>
+            )}
           </div>
         ) : posted.length === 0 ? (
           <div className="mt-6 flex flex-col items-center rounded-2xl border border-dashed border-border px-6 py-14 text-center">

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, Plus } from "lucide-react";
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { DesktopNav, MobileNav } from "./nav-links";
+import { isClerkConfigured } from "@/lib/clerk-config";
 
 export function Logo() {
   return (
@@ -15,6 +16,7 @@ export function Logo() {
 }
 
 function AuthButtons() {
+  if (!isClerkConfigured) return null;
   return (
     <>
       <Show when="signed-out">

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { getCurrentUser, requireSignIn } from "@/lib/auth";
 import { ArrowLeft, Clock3 } from "lucide-react";
 import { VerifiedBadge } from "@/components/badges";
 import { ClubAvatar } from "@/components/club-card";
@@ -22,7 +22,7 @@ function to12Hour(t: string) {
 
 // Returns the signed-in user's club, or null if they don't have one yet
 async function getClub() {
-  const user = await currentUser();
+  const user = await getCurrentUser();
   const club = user?.publicMetadata?.club;
   if (!user || typeof club !== "string" || !club) return null;
   return { userId: user.id, club };
@@ -30,7 +30,7 @@ async function getClub() {
 
 async function addEvent(formData: FormData) {
   "use server";
-  await auth.protect();
+  await requireSignIn();
 
   const me = await getClub();
   if (!me || !sql) return; // not linked to a club, so no posting
@@ -71,7 +71,7 @@ function BackLink() {
 }
 
 export default async function SubmitPage() {
-  await auth.protect();
+  await requireSignIn();
   const me = await getClub();
 
   if (!me) {

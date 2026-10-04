@@ -1,12 +1,12 @@
 "use server";
 
 import { sql } from "@/lib/db";
-import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 export async function deleteEvent(formData: FormData) {
-  const { userId } = await auth();
+  const userId = await getUserId();
   if (!userId || !sql) return;
 
   const id = Number(formData.get("id"));

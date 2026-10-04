@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
+import { getUserId } from "@/lib/auth";
 import { ArrowLeft, CalendarDays, Clock, MapPin, Trash2 } from "lucide-react";
 import { CategoryBadge, VerifiedBadge } from "@/components/badges";
 import { ClubAvatar } from "@/components/club-card";
@@ -25,7 +25,7 @@ export default async function EventDetailsPage({ params }: PageProps<"/events/[i
   const event = await getEventById(id);
   if (!event) notFound();
 
-  const { userId } = await auth();
+  const userId = await getUserId();
   const isOwner = Boolean(userId && event.source === "database" && event.ownerId === userId);
 
   const related = (await getAllEvents())
